@@ -5,7 +5,7 @@ A project being built step by step to collect tech news, select and summarize re
 ## Planned stack
 
 - Node.js with JavaScript ES modules.
-- RSS feeds, the Hacker News API, and Reddit for news collection.
+- RSS feeds and the Hacker News API for news collection.
 - PostgreSQL hosted on Neon to track sent articles.
 - The Vercel AI SDK with Gemini or OpenRouter for selection and summaries.
 - Resend for email delivery.
@@ -28,14 +28,13 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 3. Add environment configuration and validation.
 - [x] 4. Fetch and normalize RSS articles.
 - [x] 5. Add Hacker News collection.
-- [ ] 6. Add Reddit collection.
-- [ ] 7. Filter stale articles, remove duplicate links, and rank candidates.
-- [ ] 8. Add PostgreSQL storage and filter previously sent articles.
-- [ ] 9. Integrate AI selection and summaries.
-- [ ] 10. Format the HTML and plain-text digest.
-- [ ] 11. Send through Resend and record sent articles.
-- [ ] 12. Verify the complete local flow.
-- [ ] 13. Add the daily GitHub Actions workflow and document setup.
+- [x] 6. Filter stale articles, remove duplicate links, and rank candidates.
+- [ ] 7. Add PostgreSQL storage and filter previously sent articles.
+- [ ] 8. Integrate AI selection and summaries.
+- [ ] 9. Format the HTML and plain-text digest.
+- [ ] 10. Send through Resend and record sent articles.
+- [ ] 11. Verify the complete local flow.
+- [ ] 12. Add the daily GitHub Actions workflow and document setup.
 
 ## Current status
 
@@ -48,9 +47,33 @@ Articles use a common format with a title, link, description, source, publicatio
 
 Hacker News collection checks the first 60 top-story IDs in batches of up to 20 requests. Deleted stories, dead stories, and non-story items are skipped. Unix timestamps are converted to ISO dates. Story text is used when available; otherwise, the description shows the score and comment count. This step fetches API data, not full article pages.
 
-Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters. Age filtering and ranking will be added in step 7.
+Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters.
 
-Failed feeds or individual Hacker News story requests produce warnings while successful results are kept. If one source group fails, the other can still provide articles. If both source groups fail, the program exits with an error. Hacker News requests have timeouts: 8 seconds for the story list and 5 seconds per story. Email delivery is not implemented yet.
+After collection, the program filters and ranks the articles, then prints a preview of the top results. AI selection, summaries, and email delivery are not implemented yet.
+
+Failed feeds or individual Hacker News story requests produce warnings while successful results are kept. If one source group fails, the other can still provide articles. If both source groups fail, the program exits with an error. Hacker News requests have timeouts: 8 seconds for the story list and 5 seconds per story.
+
+## Filtering and ranking
+
+- Remove articles older than `MAX_ARTICLE_AGE_HOURS` and articles dated in the future.
+- Keep undated articles without a recency bonus.
+- Remove exact duplicate links within the current run, keeping the first eligible occurrence. Tracking parameters and different URL spellings are treated as different links.
+- Rank by the score below, highest first. Equal scores keep their input order.
+
+Each keyword group contributes its weight once when a whole word or phrase matches the title or description:
+
+| Keyword group | Weight |
+| --- | --- |
+| AI and machine learning | 10 |
+| Developer tools and releases | 8 |
+| Security and regulation | 7 |
+| Startups and funding | 5 |
+| Major tech companies | 4 |
+| Cloud and infrastructure | 2 |
+
+Hacker News points add `points / 100`, capped at 5. Recency adds up to 3 points, decreasing linearly to zero over 12 hours. Scores are rounded to two decimal places.
+
+The terminal preview shows up to `TOP_ARTICLES_COUNT` articles. All ranked articles remain available for later processing. Filtering previously sent articles will be added with PostgreSQL.
 
 ## Run locally
 
@@ -69,15 +92,16 @@ Then run:
 npm start
 ```
 
-Example output from the entry point (article counts vary):
+Example output before the ranked-title preview (counts vary):
 
 ```text
 Daily Tech News Agent: configuration loaded.
 Maximum article age: 25 hours.
 Maximum stories per digest: 8.
 Fetched 50 articles from RSS.
-Fetched 58 articles from Hacker News.
-Fetched 108 articles in total.
+Fetched 59 articles from Hacker News.
+Fetched 109 articles in total.
+Retained 72 articles after age filtering and deduplication.
 ```
 
 To restart automatically when source files change:
