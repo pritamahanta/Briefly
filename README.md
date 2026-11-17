@@ -27,7 +27,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 2. Set up the Node.js project and runnable entry point.
 - [x] 3. Add environment configuration and validation.
 - [x] 4. Fetch and normalize RSS articles.
-- [ ] 5. Add Hacker News collection.
+- [x] 5. Add Hacker News collection.
 - [ ] 6. Add Reddit collection.
 - [ ] 7. Filter stale articles, remove duplicate links, and rank candidates.
 - [ ] 8. Add PostgreSQL storage and filter previously sent articles.
@@ -39,11 +39,18 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 
 ## Current status
 
-The entry point loads configuration and fetches RSS articles from TechCrunch, The Verge, and Ars Technica. Articles use a common format with a title, link, description, source, publication date, and Hacker News score (currently zero for RSS articles).
+The entry point loads configuration and collects news from two source groups in parallel:
+
+- RSS feeds from TechCrunch, The Verge, and Ars Technica.
+- Hacker News top stories through its public API, using Node.js's built-in `fetch`.
+
+Articles use a common format with a title, link, description, source, publication date, and Hacker News score (zero for RSS articles).
+
+Hacker News collection checks the first 60 top-story IDs in batches of up to 20 requests. Deleted stories, dead stories, and non-story items are skipped. Unix timestamps are converted to ISO dates. Story text is used when available; otherwise, the description shows the score and comment count. This step fetches API data, not full article pages.
 
 Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters. Age filtering and ranking will be added in step 7.
 
-If a feed fails, the program prints a warning and continues with the other feeds. If all feeds fail, the program exits with an error. Email delivery is not implemented yet.
+Failed feeds or individual Hacker News story requests produce warnings while successful results are kept. If one source group fails, the other can still provide articles. If both source groups fail, the program exits with an error. Hacker News requests have timeouts: 8 seconds for the story list and 5 seconds per story. Email delivery is not implemented yet.
 
 ## Run locally
 
@@ -68,7 +75,9 @@ Example output from the entry point (article counts vary):
 Daily Tech News Agent: configuration loaded.
 Maximum article age: 25 hours.
 Maximum stories per digest: 8.
-Fetched 50 RSS articles.
+Fetched 50 articles from RSS.
+Fetched 58 articles from Hacker News.
+Fetched 108 articles in total.
 ```
 
 To restart automatically when source files change:

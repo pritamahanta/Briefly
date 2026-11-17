@@ -1,5 +1,5 @@
 import { loadConfig } from './utils/env.js';
-import { fetchRSSFeeds } from './services/newsFetcher.js';
+import { fetchAllNews } from './services/newsFetcher.js';
 
 try {
   const config = loadConfig();
@@ -8,8 +8,8 @@ try {
   console.log(`Maximum article age: ${config.maxArticleAgeHours} hours.`);
   console.log(`Maximum stories per digest: ${config.topArticlesCount}.`);
 
-  const articles = await fetchRSSFeeds();
-  console.log(`Fetched ${articles.length} RSS articles.`);
+  const articles = await fetchAllNews();
+  console.log(`Fetched ${articles.length} articles in total.`);
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
