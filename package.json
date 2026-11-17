@@ -6,5 +6,8 @@
   "scripts": {
     "start": "node src/worker.js",
     "dev": "node --watch src/worker.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }

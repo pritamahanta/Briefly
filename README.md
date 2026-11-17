@@ -25,7 +25,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 
 - [x] 1. Document the scope and build plan.
 - [x] 2. Set up the Node.js project and runnable entry point.
-- [ ] 3. Add environment configuration and validation.
+- [x] 3. Add environment configuration and validation.
 - [ ] 4. Fetch and normalize RSS articles.
 - [ ] 5. Add Hacker News collection.
 - [ ] 6. Add Reddit collection.
@@ -39,11 +39,20 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 
 ## Current status
 
-The Node.js project and entry point are set up. The entry point currently prints a setup confirmation; news collection and delivery are not implemented yet. No dependencies or external services have been added.
+The entry point loads and validates environment configuration using dotenv. News collection and delivery are not implemented yet. No external services have been connected.
 
 ## Run locally
 
 Requires Node.js and npm. No API keys are needed for the current step.
+
+Install dependencies and create your local configuration:
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Then run:
 
 ```bash
 npm start
@@ -52,7 +61,9 @@ npm start
 Expected output from the entry point:
 
 ```text
-Daily Tech News Agent: project setup complete.
+Daily Tech News Agent: configuration loaded.
+Maximum article age: 25 hours.
+Maximum stories per digest: 8.
 ```
 
 To restart automatically when source files change:
@@ -60,3 +71,14 @@ To restart automatically when source files change:
 ```bash
 npm run dev
 ```
+
+## Configuration
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `MAX_ARTICLE_AGE_HOURS` | `25` | Maximum article age in hours. |
+| `TOP_ARTICLES_COUNT` | `8` | Maximum number of stories in a digest. |
+
+Both values must be positive whole numbers. Invalid values stop the program with an error. Missing values use the defaults, so the program can also run without a `.env` file. Existing environment variables take precedence over `.env` values.
+
+Your `.env` file is ignored by Git. API keys and service-specific settings will be added when their integrations are implemented.
