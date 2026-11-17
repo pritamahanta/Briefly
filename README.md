@@ -26,7 +26,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 1. Document the scope and build plan.
 - [x] 2. Set up the Node.js project and runnable entry point.
 - [x] 3. Add environment configuration and validation.
-- [ ] 4. Fetch and normalize RSS articles.
+- [x] 4. Fetch and normalize RSS articles.
 - [ ] 5. Add Hacker News collection.
 - [ ] 6. Add Reddit collection.
 - [ ] 7. Filter stale articles, remove duplicate links, and rank candidates.
@@ -39,11 +39,15 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 
 ## Current status
 
-The entry point loads and validates environment configuration using dotenv. News collection and delivery are not implemented yet. No external services have been connected.
+The entry point loads configuration and fetches RSS articles from TechCrunch, The Verge, and Ars Technica. Articles use a common format with a title, link, description, source, publication date, and Hacker News score (currently zero for RSS articles).
+
+Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters. Age filtering and ranking will be added in step 7.
+
+If a feed fails, the program prints a warning and continues with the other feeds. If all feeds fail, the program exits with an error. Email delivery is not implemented yet.
 
 ## Run locally
 
-Requires Node.js and npm. No API keys are needed for the current step.
+Requires Node.js, npm, and internet access. No API keys are needed for the current step.
 
 Install dependencies and create your local configuration:
 
@@ -58,12 +62,13 @@ Then run:
 npm start
 ```
 
-Expected output from the entry point:
+Example output from the entry point (article counts vary):
 
 ```text
 Daily Tech News Agent: configuration loaded.
 Maximum article age: 25 hours.
 Maximum stories per digest: 8.
+Fetched 50 RSS articles.
 ```
 
 To restart automatically when source files change:
