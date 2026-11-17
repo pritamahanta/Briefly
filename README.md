@@ -2,13 +2,7 @@
 
 A project being built step by step to collect tech news, select and summarize relevant stories, and email a daily digest.
 
-## Reference
-
-Based on [Dutta2005/daily-tech-news-agent](https://github.com/Dutta2005/daily-tech-news-agent).
-
-Initial review: commit [`25c94c1`](https://github.com/Dutta2005/daily-tech-news-agent/tree/25c94c1a0a146ea0e9acd98222cf2afa2c688c73).
-
-The reference uses:
+## Planned stack
 
 - Node.js with JavaScript ES modules.
 - RSS feeds, the Hacker News API, and Reddit for news collection.
@@ -17,7 +11,7 @@ The reference uses:
 - Resend for email delivery.
 - GitHub Actions for a daily schedule.
 
-We will consult the relevant reference files at each implementation step. Any change or replacement will be discussed before implementation, including minor changes. The AI provider will be chosen before its integration step.
+The AI provider will be chosen before its integration step.
 
 ## Planned flow
 
@@ -29,7 +23,7 @@ Only record articles as sent after the email service accepts the email.
 
 Each step ends with verification and a pause for a manual commit. Dependencies and configuration will be added when the corresponding feature needs them.
 
-- [x] 1. Document the scope, reference, and build plan.
+- [x] 1. Document the scope and build plan.
 - [x] 2. Set up the Node.js project and runnable entry point.
 - [ ] 3. Add environment configuration and validation.
 - [ ] 4. Fetch and normalize RSS articles.
