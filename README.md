@@ -30,7 +30,7 @@ Only record articles as sent after the email service accepts the email.
 Each step ends with verification and a pause for a manual commit. Dependencies and configuration will be added when the corresponding feature needs them.
 
 - [x] 1. Document the scope, reference, and build plan.
-- [ ] 2. Set up the Node.js project and runnable entry point.
+- [x] 2. Set up the Node.js project and runnable entry point.
 - [ ] 3. Add environment configuration and validation.
 - [ ] 4. Fetch and normalize RSS articles.
 - [ ] 5. Add Hacker News collection.
@@ -45,4 +45,24 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 
 ## Current status
 
-Planning is complete. Application code, dependencies, and external services have not been set up yet.
+The Node.js project and entry point are set up. The entry point currently prints a setup confirmation; news collection and delivery are not implemented yet. No dependencies or external services have been added.
+
+## Run locally
+
+Requires Node.js and npm. No API keys are needed for the current step.
+
+```bash
+npm start
+```
+
+Expected output from the entry point:
+
+```text
+Daily Tech News Agent: project setup complete.
+```
+
+To restart automatically when source files change:
+
+```bash
+npm run dev
+```

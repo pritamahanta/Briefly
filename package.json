@@ -1,0 +1,10 @@
+{
+  "name": "daily-tech-news-agent",
+  "version": "1.0.0",
+  "description": "A daily tech news digest agent.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/worker.js",
+    "dev": "node --watch src/worker.js"
+  }
+}
