@@ -2,6 +2,7 @@ import { loadConfig } from './utils/env.js';
 import { fetchAllNews } from './services/newsFetcher.js';
 import { filterArticles } from './utils/articleFilter.js';
 import { rankArticles } from './utils/scorer.js';
+import { initDB, filterUnseen, closeDB } from './db/dbService.js';
 
 try {
   const config = loadConfig();
@@ -10,16 +11,22 @@ try {
   console.log(`Maximum article age: ${config.maxArticleAgeHours} hours.`);
   console.log(`Maximum stories per digest: ${config.topArticlesCount}.`);
 
+  await initDB(config.dbUrl);
+  console.log('Database initialized.');
+
   const articles = await fetchAllNews();
   console.log(`Fetched ${articles.length} articles in total.`);
 
   const now = Date.now();
   const filtered = filterArticles(articles, config.maxArticleAgeHours, now);
-  const ranked = rankArticles(filtered, now);
-  console.log(`Retained ${ranked.length} articles after age filtering and deduplication.`);
+  console.log(`Retained ${filtered.length} articles after age filtering and deduplication.`);
+
+  const unseen = await filterUnseen(filtered);
+  console.log(`Found ${unseen.length} articles not previously sent.`);
+  const ranked = rankArticles(unseen, now);
 
   if (ranked.length === 0) {
-    console.log('No articles available after filtering.');
+    console.log('No new articles available after filtering.');
   } else {
     console.log('Top-ranked articles:');
     ranked.slice(0, config.topArticlesCount).forEach((article, index) => {
@@ -27,6 +34,13 @@ try {
     });
   }
 } catch (error) {
-  console.error(error.message);
+  console.error(error.message || error.code || 'Agent run failed.');
   process.exitCode = 1;
+} finally {
+  try {
+    await closeDB();
+  } catch (error) {
+    console.error(`Database cleanup failed: ${error.message}`);
+    process.exitCode = 1;
+  }
 }

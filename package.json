@@ -4,11 +4,16 @@
   "description": "A daily tech news digest agent.",
   "type": "module",
   "scripts": {
-    "start": "node src/worker.js",
-    "dev": "node --watch src/worker.js"
+    "build": "node scripts/build.js",
+    "test:db": "node --network-family-autoselection-attempt-timeout=2000 scripts/check-db.js",
+    "start": "node --network-family-autoselection-attempt-timeout=2000 src/worker.js",
+    "dev": "node --network-family-autoselection-attempt-timeout=2000 --watch src/worker.js"
   },
   "dependencies": {
+    "@neon/config": "^1.14.2",
+    "@neon/env": "^2.1.5",
     "dotenv": "^17.4.2",
+    "pg": "^8.23.1",
     "rss-parser": "^3.13.0"
   }
 }

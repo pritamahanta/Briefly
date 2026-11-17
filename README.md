@@ -29,7 +29,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 4. Fetch and normalize RSS articles.
 - [x] 5. Add Hacker News collection.
 - [x] 6. Filter stale articles, remove duplicate links, and rank candidates.
-- [ ] 7. Add PostgreSQL storage and filter previously sent articles.
+- [x] 7. Add PostgreSQL storage and filter previously sent articles.
 - [ ] 8. Integrate AI selection and summaries.
 - [ ] 9. Format the HTML and plain-text digest.
 - [ ] 10. Send through Resend and record sent articles.
@@ -49,7 +49,9 @@ Hacker News collection checks the first 60 top-story IDs in batches of up to 20 
 
 Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters.
 
-After collection, the program filters and ranks the articles, then prints a preview of the top results. AI selection, summaries, and email delivery are not implemented yet.
+The database integration initializes an `articles` table, removes previously sent links, and closes connections when the run ends. After collection, the program filters and ranks the unseen articles, then prints a preview. Preview runs do not mark articles as sent. AI selection, summaries, and email delivery are not implemented yet.
+
+Neon CLI setup, deployment, database integration checks, and the complete collection-and-preview run have been verified.
 
 Failed feeds or individual Hacker News story requests produce warnings while successful results are kept. If one source group fails, the other can still provide articles. If both source groups fail, the program exits with an error. Hacker News requests have timeouts: 8 seconds for the story list and 5 seconds per story.
 
@@ -73,11 +75,11 @@ Each keyword group contributes its weight once when a whole word or phrase match
 
 Hacker News points add `points / 100`, capped at 5. Recency adds up to 3 points, decreasing linearly to zero over 12 hours. Scores are rounded to two decimal places.
 
-The terminal preview shows up to `TOP_ARTICLES_COUNT` articles. All ranked articles remain available for later processing. Filtering previously sent articles will be added with PostgreSQL.
+The terminal preview shows up to `TOP_ARTICLES_COUNT` articles. All ranked articles remain available for later processing. Previously sent links are checked against PostgreSQL before ranking.
 
 ## Run locally
 
-Requires Node.js, npm, and internet access. No API keys are needed for the current step.
+Development uses Node.js 24, npm, and internet access. A PostgreSQL connection string is required. No AI or email API keys are needed yet.
 
 Install dependencies and create your local configuration:
 
@@ -86,23 +88,13 @@ npm install
 cp .env.example .env
 ```
 
-Then run:
+Set up Neon as described below, then run:
 
 ```bash
 npm start
 ```
 
-Example output before the ranked-title preview (counts vary):
-
-```text
-Daily Tech News Agent: configuration loaded.
-Maximum article age: 25 hours.
-Maximum stories per digest: 8.
-Fetched 50 articles from RSS.
-Fetched 59 articles from Hacker News.
-Fetched 109 articles in total.
-Retained 72 articles after age filtering and deduplication.
-```
+The program prints database initialization, article counts, unseen article counts, and a ranked preview. Counts vary with the live feeds.
 
 To restart automatically when source files change:
 
@@ -110,13 +102,51 @@ To restart automatically when source files change:
 npm run dev
 ```
 
+## Neon setup
+
+Install the CLI and sign in from your terminal:
+
+```bash
+npm i -g neon@latest
+neon login
+```
+
+For a fresh checkout, link your own organization, project, and branch:
+
+```bash
+neon init -y --org-id <organization-id> --project-id <project-id> --branch production --services postgres
+```
+
+Deploy the PostgreSQL configuration:
+
+```bash
+neon deploy
+```
+
+The CLI writes `DATABASE_URL` and the branch's other connection settings to `.env` when it exists, otherwise `.env.local`. The app reads both files, with `.env.local` taking precedence. Use `sslmode=verify-full` in `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, preserving the other query parameters. Check this again after pulling new connection settings. See [Neon's connection guide](https://neon.com/docs/connect/connect-from-any-app).
+
+The runtime uses `pg` with parameterized SQL and one `articles` table. Exact article URLs are hashed with SHA-256 for lookup; URL paths keep their original case. `markAsSent()` is implemented for the later email step and must only run after the email service accepts the digest.
+
+## Verification
+
+```bash
+npm run build
+npm run test:db
+npm start
+```
+
+This is a plain JavaScript worker. The build command checks source syntax and `neon.ts`; it does not generate compiled files. The database check uses unique test URLs, verifies inserts and sent-article filtering, and deletes its own test rows afterward.
+
+The start, dev, and database-test commands allow 2 seconds per connection attempt when Node selects IPv4 or IPv6 addresses. This avoids premature address-selection timeouts on higher-latency connections while keeping both address families enabled.
+
 ## Configuration
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `DATABASE_URL` | Required | PostgreSQL connection string pulled by Neon. |
 | `MAX_ARTICLE_AGE_HOURS` | `25` | Maximum article age in hours. |
 | `TOP_ARTICLES_COUNT` | `8` | Maximum number of stories in a digest. |
 
-Both values must be positive whole numbers. Invalid values stop the program with an error. Missing values use the defaults, so the program can also run without a `.env` file. Existing environment variables take precedence over `.env` values.
+The two numeric settings must be positive whole numbers. Missing numeric settings use their defaults. `DATABASE_URL` must be a PostgreSQL connection string. Invalid settings stop the program with an error. Existing environment variables take precedence over values in the local files.
 
-Your `.env` file is ignored by Git. API keys and service-specific settings will be added when their integrations are implemented.
+The `.env`, `.env.local`, and local `.neon` link files are ignored by Git. AI and email API keys will be added when those integrations are implemented.

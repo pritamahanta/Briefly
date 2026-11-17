@@ -1,0 +1,11 @@
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+
+const files = readdirSync('src', { recursive: true }).filter((file) => file.endsWith('.js'));
+
+for (const file of [...files.map((file) => join('src', file)), 'neon.ts']) {
+  execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
+}
+
+console.log(`Build check passed: ${files.length} JavaScript files and neon.ts.`);
