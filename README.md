@@ -32,7 +32,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 9. Format the HTML and plain-text digest.
 - [x] 10. Send through Resend and record sent articles.
 - [x] 11. Verify the complete local flow.
-- [ ] 12. Add the daily GitHub Actions workflow and document setup.
+- [x] 12. Add the daily GitHub Actions workflow and document setup.
 
 ## Current status
 
@@ -180,6 +180,28 @@ EMAIL_TO=your_resend_account_email
 ```
 
 Use one plain email address for each address setting. There is no fallback recipient or sender. Resend's test sender can only send to the email address associated with your Resend account. For other recipients, verify a sending domain and set `EMAIL_FROM` to an address on it. See [Resend's test-domain guidance](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
+
+## GitHub Actions setup
+
+The workflow in `.github/workflows/daily-digest.yml` sends a digest daily at **8:00 AM IST** (`30 2 * * *` in UTC). It installs dependencies with `npm ci`, runs the tests and syntax checks, then runs the agent with Node.js 24. Runs are serialized to prevent this workflow from sending overlapping digests.
+
+In your GitHub repository, open **Settings → Secrets and variables → Actions → New repository secret** and copy these five values from your local environment file:
+
+| Repository secret | Value |
+| --- | --- |
+| `DATABASE_URL` | Your existing Neon PostgreSQL URL, preserving its query parameters and `sslmode=verify-full`. |
+| `AI_API_KEY` | Your existing Gemini API key. |
+| `RESEND_API_KEY` | Your existing Resend API key. |
+| `EMAIL_FROM` | Your configured sender address. |
+| `EMAIL_TO` | Your configured recipient address. |
+
+No new API keys or Neon CLI login are needed on GitHub. Secrets are provided only to the agent step. Keep the local environment files out of Git. See [GitHub's repository secrets instructions](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets).
+
+Optionally, add repository **Variables** named `GEMINI_MODEL`, `MAX_ARTICLE_AGE_HOURS`, or `TOP_ARTICLES_COUNT`. Without these variables, the workflow uses `gemini-3.5-flash-lite`, `25`, and `8` respectively.
+
+Commit and push the workflow to your repository's default branch to activate the schedule. To check a hosted preview, open **Actions → Daily Tech News Agent → Run workflow**, leave `send_email` unchecked, and run it. Check the test, syntax-check, and agent logs. To send manually, select `send_email`; this sends a real email and records its articles after acceptance. Scheduled runs always use send mode.
+
+GitHub schedules can run late, and public repositories lose their active schedule after 60 days without repository activity. Scheduled workflows only run from the default branch. See [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule). The first GitHub-hosted run must be checked after pushing; local verification does not prove that repository secrets are configured correctly.
 
 ## Verification
 
