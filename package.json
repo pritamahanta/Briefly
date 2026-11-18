@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A daily tech news digest, summarized by Gemini and emailed through Resend.",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "test": "node test/agent.test.js",
     "check": "node scripts/check.js",
