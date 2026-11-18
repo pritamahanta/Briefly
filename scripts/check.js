@@ -8,4 +8,4 @@ for (const file of files.map((file) => join('src', file))) {
   execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
 }
 
-console.log(`Build check passed: ${files.length} JavaScript files.`);
+console.log(`Syntax check passed: ${files.length} JavaScript files.`);
