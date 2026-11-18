@@ -4,6 +4,7 @@ import { filterArticles } from './utils/articleFilter.js';
 import { rankArticles } from './utils/scorer.js';
 import { initDB, filterUnseen, closeDB } from './db/dbService.js';
 import { summarizeAndFilter } from './services/aiService.js';
+import { formatEmail } from './services/formatter.js';
 
 try {
   const config = loadConfig();
@@ -32,11 +33,8 @@ try {
     console.log(`Selecting and summarizing with Gemini (${config.geminiModel}).`);
     const summarized = await summarizeAndFilter(ranked, config);
     console.log(`AI selected ${summarized.length} stories.`);
-    summarized.forEach((article, index) => {
-      console.log(`${index + 1}. [${article.source}] ${article.title}`);
-      console.log(article.summary);
-      console.log(article.link);
-    });
+    const email = formatEmail(summarized);
+    console.log(email.text);
   }
 } catch (error) {
   console.error(error.message || error.code || 'Agent run failed.');

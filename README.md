@@ -29,7 +29,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 6. Filter stale articles, remove duplicate links, and rank candidates.
 - [x] 7. Add PostgreSQL storage and filter previously sent articles.
 - [x] 8. Integrate AI selection and summaries.
-- [ ] 9. Format the HTML and plain-text digest.
+- [x] 9. Format the HTML and plain-text digest.
 - [ ] 10. Send through Resend and record sent articles.
 - [ ] 11. Verify the complete local flow.
 - [ ] 12. Add the daily GitHub Actions workflow and document setup.
@@ -47,7 +47,7 @@ Hacker News collection checks the first 60 top-story IDs in batches of up to 20 
 
 Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters.
 
-The database integration initializes an `articles` table, removes previously sent links, and closes connections when the run ends. After collection, the program filters and ranks unseen articles, then uses Gemini to select and summarize stories for a terminal preview. Preview runs do not mark articles as sent. Email formatting and delivery are not implemented yet.
+The database integration initializes an `articles` table, removes previously sent links, and closes connections when the run ends. After collection, the program filters and ranks unseen articles, then uses Gemini to select and summarize stories. It formats HTML and plain-text versions of the digest and prints the plain-text preview. Preview runs do not mark articles as sent. Email delivery is not implemented yet.
 
 Neon CLI setup, deployment, database integration checks, and the complete collection-and-preview run have been verified.
 
@@ -86,6 +86,14 @@ Previously sent links are checked against PostgreSQL before ranking. The highest
 
 The request has a 60-second total timeout and up to two SDK retries for retryable failures. Summaries are limited to 1,200 characters each. Gemini is instructed to use 2-3 short sentences when the supplied information supports them and a shorter summary when information is limited.
 
+## Email formatting
+
+`formatEmail()` returns `{ html, text }` with a dated heading, story count, numbered stories, sources, summaries, and article links. Both versions keep the selected story order. Dates use `Asia/Kolkata` consistently across local and scheduled runs.
+
+The HTML uses inline styles and a table layout. Titles, sources, summaries, and link attributes are escaped, and links must use HTTP or HTTPS. An empty selection produces a "No new stories today" message.
+
+The plain-text version is printed by `npm start`. The HTML version is ready for the email delivery step; formatting itself does not write files or contact an email service. No additional dependency or API key is required for formatting.
+
 ## Run locally
 
 Development uses Node.js 24, npm, and internet access. A PostgreSQL connection string and Gemini API key are required for the preview. No email API key is needed yet.
@@ -103,7 +111,7 @@ Set up Neon and Gemini as described below, then run:
 npm start
 ```
 
-The program prints database initialization, article counts, unseen article counts, and the selected stories with summaries and links. Counts vary with the live feeds. Each run with eligible candidates makes a Gemini API request.
+The program prints database initialization, article counts, unseen article counts, and the plain-text digest preview. Counts vary with the live feeds. Each run with eligible candidates makes a Gemini API request.
 
 To restart automatically when source files change:
 
