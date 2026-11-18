@@ -1,7 +1,7 @@
 {
-  "name": "daily-tech-news-agent",
+  "name": "briefly",
   "version": "1.0.0",
-  "description": "A daily tech news digest agent.",
+  "description": "A daily tech news digest, summarized by Gemini and emailed through Resend.",
   "type": "module",
   "scripts": {
     "test": "node test/agent.test.js",

@@ -2,7 +2,7 @@ import Parser from 'rss-parser';
 
 const parser = new Parser({
   timeout: 10000,
-  headers: { 'User-Agent': 'DailyTechNewsAgent/1.0' },
+  headers: { 'User-Agent': 'Briefly/1.0' },
   customFields: {
     item: [['summary', 'summary', { includeSnippet: true }]],
   },

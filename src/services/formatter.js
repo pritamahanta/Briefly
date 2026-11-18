@@ -44,14 +44,14 @@ export function formatEmail(articles, now = new Date()) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Tech News Agent</title>
+  <title>Briefly</title>
 </head>
 <body style="margin:0;padding:24px 12px;background-color:#f3f4f6;font-family:Arial,sans-serif;color:#111827;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background-color:#ffffff;">
         <tr><td style="padding:24px;">
-          <h1 style="font-size:26px;margin:0 0 8px;">Daily Tech News Agent</h1>
+          <h1 style="font-size:26px;margin:0 0 8px;">Briefly</h1>
           <p style="color:#6b7280;font-size:14px;margin:0 0 16px;">${date}</p>
           <p>${count}</p>
           ${content}
@@ -63,7 +63,7 @@ export function formatEmail(articles, now = new Date()) {
 </body>
 </html>`;
 
-  const lines = ['DAILY TECH NEWS AGENT', date, count, ''];
+  const lines = ['BRIEFLY', date, count, ''];
   if (articles.length === 0) lines.push('No new stories today.', '');
   for (const [index, article] of articles.entries()) {
     lines.push(`${index + 1}. ${article.title}`, `Source: ${article.source}`, article.summary, `Read: ${article.link}`, '');
@@ -71,7 +71,7 @@ export function formatEmail(articles, now = new Date()) {
   lines.push(footer);
 
   return {
-    subject: `Daily Tech News Agent — ${date}`,
+    subject: `Briefly — ${date}`,
     html,
     text: lines.join('\n'),
   };

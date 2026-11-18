@@ -89,7 +89,7 @@ test('send mode renders both bodies, escapes HTML, and persists only after accep
   const email = h.calls.emails[0];
   assert.equal(email.from, h.config.emailFrom);
   assert.equal(email.to, h.config.emailTo);
-  assert.ok(email.subject.startsWith('Daily Tech News Agent — '));
+  assert.ok(email.subject.startsWith('Briefly — '));
   assert.ok(email.html.includes('&lt;script&gt;markup&lt;/script&gt; &amp; details.'));
   assert.ok(!email.html.includes('<script>'));
   assert.ok(email.text.includes('https://example.invalid/first'));

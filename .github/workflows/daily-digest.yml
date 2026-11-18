@@ -1,4 +1,4 @@
-name: Daily Tech News Agent
+name: Briefly
 
 on:
   schedule:
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: daily-tech-news-agent
+  group: briefly
   cancel-in-progress: false
 
 jobs:

@@ -10,7 +10,7 @@ export async function runAgent(config, { shouldSend = false, services = {} } = {
   const io = { initDB, fetchAllNews, filterUnseen, summarizeAndFilter, sendEmail, markAsSent, ...services };
   if (shouldSend) validateEmailConfig(config);
 
-  console.log('Daily Tech News Agent: configuration loaded.');
+  console.log('Briefly: configuration loaded.');
   console.log(`Mode: ${shouldSend ? 'send' : 'preview'}.`);
   console.log(`Maximum article age: ${config.maxArticleAgeHours} hours.`);
   console.log(`Maximum stories per digest: ${config.topArticlesCount}.`);
