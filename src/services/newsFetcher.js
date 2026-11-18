@@ -1,4 +1,5 @@
 import Parser from 'rss-parser';
+import { normalizeUrl } from '../utils/url.js';
 
 const parser = new Parser({
   timeout: 10000,
@@ -18,9 +19,11 @@ function normalizeArticle(item, source) {
   const rawLink = item.link || item.guid;
   const link = typeof rawLink === 'string' ? rawLink.trim() : '';
 
+  let canonicalLink;
   try {
     const url = new URL(link);
     if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;
+    canonicalLink = normalizeUrl(link);
   } catch {
     return null;
   }
@@ -30,7 +33,7 @@ function normalizeArticle(item, source) {
 
   return {
     title: item.title?.trim() || 'Untitled',
-    link,
+    link: canonicalLink,
     description: description
       .replace(/\s+/g, ' ')
       .trim()

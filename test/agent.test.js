@@ -3,6 +3,8 @@ import test from 'node:test';
 import { runAgent } from '../src/agent.js';
 import { summarizeAndFilter } from '../src/services/aiService.js';
 import { sendEmail } from '../src/services/emailService.js';
+import { fetchHackerNews } from '../src/services/newsFetcher.js';
+import { normalizeUrl } from '../src/utils/url.js';
 
 function story(name, title = 'AI release', ageHours = 1) {
   return {
@@ -167,4 +169,28 @@ test('recording failure reports the accepted email ID and avoids retrying delive
   assert.equal(h.calls.emails.length, 1);
   assert.equal(h.sentLinks.size, 0);
   assert.ok(!h.logs.some((line) => line.startsWith('Recorded ')));
+});
+
+test('normalizeUrl removes tracking parameters and fragments but keeps other parameters', () => {
+  assert.equal(
+    normalizeUrl('https://example.invalid/Story?id=7&utm_source=x&utm_medium=y&fbclid=z#top'),
+    'https://example.invalid/Story?id=7',
+  );
+  assert.equal(normalizeUrl('https://example.invalid/story?utm_campaign=a'), 'https://example.invalid/story');
+  assert.equal(normalizeUrl('https://example.invalid/story?a=1'), 'https://example.invalid/story?a=1');
+});
+
+test('collected article links are normalized', async (t) => {
+  const responses = {
+    '/topstories.json': [1],
+    '/item/1.json': { id: 1, type: 'story', title: 'Tracked link', url: 'https://example.invalid/a?utm_source=hn', score: 10, time: 1700000000 },
+  };
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    const key = Object.keys(responses).find((path) => String(url).endsWith(path));
+    return { ok: true, json: async () => responses[key] };
+  });
+
+  const articles = await fetchHackerNews('https://hn.invalid/v0');
+  assert.equal(articles.length, 1);
+  assert.equal(articles[0].link, 'https://example.invalid/a');
 });
