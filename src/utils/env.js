@@ -29,6 +29,9 @@ export function loadConfig() {
     dbUrl,
     aiApiKey: process.env.AI_API_KEY?.trim(),
     geminiModel: process.env.GEMINI_MODEL?.trim() || 'gemini-3.5-flash-lite',
+    resendApiKey: process.env.RESEND_API_KEY?.trim(),
+    emailFrom: process.env.EMAIL_FROM?.trim(),
+    emailTo: process.env.EMAIL_TO?.trim(),
     maxArticleAgeHours: readPositiveInteger('MAX_ARTICLE_AGE_HOURS', 25),
     topArticlesCount: readPositiveInteger('TOP_ARTICLES_COUNT', 8),
   };

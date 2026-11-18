@@ -70,5 +70,9 @@ export function formatEmail(articles, now = new Date()) {
   }
   lines.push(footer);
 
-  return { html, text: lines.join('\n') };
+  return {
+    subject: `Daily Tech News Agent — ${date}`,
+    html,
+    text: lines.join('\n'),
+  };
 }
