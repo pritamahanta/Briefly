@@ -31,7 +31,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 8. Integrate AI selection and summaries.
 - [x] 9. Format the HTML and plain-text digest.
 - [x] 10. Send through Resend and record sent articles.
-- [ ] 11. Verify the complete local flow.
+- [x] 11. Verify the complete local flow.
 - [ ] 12. Add the daily GitHub Actions workflow and document setup.
 
 ## Current status
@@ -156,7 +156,7 @@ neon deploy
 
 The CLI writes `DATABASE_URL` and the branch's other connection settings to `.env` when it exists, otherwise `.env.local`. The app reads both files, with `.env.local` taking precedence. Use `sslmode=verify-full` in `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, preserving the other query parameters. Check this again after pulling new connection settings. See [Neon's connection guide](https://neon.com/docs/connect/connect-from-any-app).
 
-The runtime uses `pg` with parameterized SQL and one `articles` table. Exact article URLs are hashed with SHA-256 for lookup; URL paths keep their original case. `markAsSent()` is implemented for the later email step and must only run after the email service accepts the digest.
+The runtime uses `pg` with parameterized SQL and one `articles` table. Exact article URLs are hashed with SHA-256 for lookup; URL paths keep their original case. `markAsSent()` records the selected articles after the email service accepts the digest.
 
 ## Gemini setup
 
@@ -184,10 +184,15 @@ Use one plain email address for each address setting. There is no fallback recip
 ## Verification
 
 ```bash
+npm test
 npm run build
 npm run test:db
 npm start
 ```
+
+`npm test` uses Node's built-in test runner. It exercises the workflow with fake external services and real filtering, ranking, AI-response validation, email formatting, and email-response validation. It requires no credentials, makes no network requests, and sends no email. It covers preview isolation, repeat runs, empty results, missing settings, provider failures, invalid selections, and recording only after acceptance.
+
+`runAgent()` in `src/agent.js` contains the workflow and accepts service replacements for these tests. `src/worker.js` loads configuration, selects the mode, handles errors, and closes the database connection.
 
 This is a plain JavaScript worker. The build command checks source syntax and `neon.ts`; it does not generate compiled files. The database check uses unique test URLs, verifies inserts and sent-article filtering, and deletes its own test rows afterward.
 

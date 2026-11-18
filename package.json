@@ -4,6 +4,7 @@
   "description": "A daily tech news digest agent.",
   "type": "module",
   "scripts": {
+    "test": "node test/agent.test.js",
     "build": "node scripts/build.js",
     "test:db": "node --network-family-autoselection-attempt-timeout=2000 scripts/check-db.js",
     "start": "node --network-family-autoselection-attempt-timeout=2000 src/worker.js",
