@@ -3,6 +3,7 @@ import { fetchAllNews } from './services/newsFetcher.js';
 import { filterArticles } from './utils/articleFilter.js';
 import { rankArticles } from './utils/scorer.js';
 import { initDB, filterUnseen, closeDB } from './db/dbService.js';
+import { summarizeAndFilter } from './services/aiService.js';
 
 try {
   const config = loadConfig();
@@ -28,9 +29,13 @@ try {
   if (ranked.length === 0) {
     console.log('No new articles available after filtering.');
   } else {
-    console.log('Top-ranked articles:');
-    ranked.slice(0, config.topArticlesCount).forEach((article, index) => {
-      console.log(`${index + 1}. [${article.source}] ${article.title} (score: ${article.score})`);
+    console.log(`Selecting and summarizing with Gemini (${config.geminiModel}).`);
+    const summarized = await summarizeAndFilter(ranked, config);
+    console.log(`AI selected ${summarized.length} stories.`);
+    summarized.forEach((article, index) => {
+      console.log(`${index + 1}. [${article.source}] ${article.title}`);
+      console.log(article.summary);
+      console.log(article.link);
     });
   }
 } catch (error) {

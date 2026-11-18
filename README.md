@@ -7,11 +7,9 @@ A project being built step by step to collect tech news, select and summarize re
 - Node.js with JavaScript ES modules.
 - RSS feeds and the Hacker News API for news collection.
 - PostgreSQL hosted on Neon to track sent articles.
-- The Vercel AI SDK with Gemini or OpenRouter for selection and summaries.
+- The Vercel AI SDK with Gemini for selection and summaries.
 - Resend for email delivery.
 - GitHub Actions for a daily schedule.
-
-The AI provider will be chosen before its integration step.
 
 ## Planned flow
 
@@ -30,7 +28,7 @@ Each step ends with verification and a pause for a manual commit. Dependencies a
 - [x] 5. Add Hacker News collection.
 - [x] 6. Filter stale articles, remove duplicate links, and rank candidates.
 - [x] 7. Add PostgreSQL storage and filter previously sent articles.
-- [ ] 8. Integrate AI selection and summaries.
+- [x] 8. Integrate AI selection and summaries.
 - [ ] 9. Format the HTML and plain-text digest.
 - [ ] 10. Send through Resend and record sent articles.
 - [ ] 11. Verify the complete local flow.
@@ -49,7 +47,7 @@ Hacker News collection checks the first 60 top-story IDs in batches of up to 20 
 
 Items without a valid HTTP or HTTPS article link are skipped. Missing titles become `Untitled`; missing or invalid publication dates become `null`. Descriptions are limited to 300 characters.
 
-The database integration initializes an `articles` table, removes previously sent links, and closes connections when the run ends. After collection, the program filters and ranks the unseen articles, then prints a preview. Preview runs do not mark articles as sent. AI selection, summaries, and email delivery are not implemented yet.
+The database integration initializes an `articles` table, removes previously sent links, and closes connections when the run ends. After collection, the program filters and ranks unseen articles, then uses Gemini to select and summarize stories for a terminal preview. Preview runs do not mark articles as sent. Email formatting and delivery are not implemented yet.
 
 Neon CLI setup, deployment, database integration checks, and the complete collection-and-preview run have been verified.
 
@@ -75,11 +73,22 @@ Each keyword group contributes its weight once when a whole word or phrase match
 
 Hacker News points add `points / 100`, capped at 5. Recency adds up to 3 points, decreasing linearly to zero over 12 hours. Scores are rounded to two decimal places.
 
-The terminal preview shows up to `TOP_ARTICLES_COUNT` articles. All ranked articles remain available for later processing. Previously sent links are checked against PostgreSQL before ranking.
+Previously sent links are checked against PostgreSQL before ranking. The highest-ranked candidates are then passed to Gemini.
+
+## AI selection and summaries
+
+- Send at most 30 ranked, unseen candidates to Gemini.
+- Select up to `TOP_ARTICLES_COUNT` stories, removing similar coverage of the same story.
+- Request summaries based only on supplied titles and feed descriptions. Full article pages are not fetched.
+- Use structured JSON output and validate article indices, duplicate selections, summary text, and the selection limit.
+- Keep titles, links, sources, dates, and scores from the original records; the model supplies only indices and summaries.
+- Skip the AI request when there are no candidates. Provider failures or invalid selections stop the run with an error.
+
+The request has a 60-second total timeout and up to two SDK retries for retryable failures. Summaries are limited to 1,200 characters each. Gemini is instructed to use 2-3 short sentences when the supplied information supports them and a shorter summary when information is limited.
 
 ## Run locally
 
-Development uses Node.js 24, npm, and internet access. A PostgreSQL connection string is required. No AI or email API keys are needed yet.
+Development uses Node.js 24, npm, and internet access. A PostgreSQL connection string and Gemini API key are required for the preview. No email API key is needed yet.
 
 Install dependencies and create your local configuration:
 
@@ -88,13 +97,13 @@ npm install
 cp .env.example .env
 ```
 
-Set up Neon as described below, then run:
+Set up Neon and Gemini as described below, then run:
 
 ```bash
 npm start
 ```
 
-The program prints database initialization, article counts, unseen article counts, and a ranked preview. Counts vary with the live feeds.
+The program prints database initialization, article counts, unseen article counts, and the selected stories with summaries and links. Counts vary with the live feeds. Each run with eligible candidates makes a Gemini API request.
 
 To restart automatically when source files change:
 
@@ -127,6 +136,17 @@ The CLI writes `DATABASE_URL` and the branch's other connection settings to `.en
 
 The runtime uses `pg` with parameterized SQL and one `articles` table. Exact article URLs are hashed with SHA-256 for lookup; URL paths keep their original case. `markAsSent()` is implemented for the later email step and must only run after the email service accepts the digest.
 
+## Gemini setup
+
+Create an API key in [Google AI Studio](https://aistudio.google.com/apikey), then add these settings to your existing `.env` without replacing the database settings:
+
+```dotenv
+AI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.5-flash-lite
+```
+
+The model is configurable. The default is [Gemini 3.5 Flash-Lite](https://aistudio.google.com/docs/models/gemini-3.5-flash-lite). Model access and quotas depend on your Google project. Keep the API key in the ignored environment file.
+
 ## Verification
 
 ```bash
@@ -144,9 +164,11 @@ The start, dev, and database-test commands allow 2 seconds per connection attemp
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | Required | PostgreSQL connection string pulled by Neon. |
+| `AI_API_KEY` | Required for AI requests | Gemini API key from Google AI Studio. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model used for selection and summaries. |
 | `MAX_ARTICLE_AGE_HOURS` | `25` | Maximum article age in hours. |
 | `TOP_ARTICLES_COUNT` | `8` | Maximum number of stories in a digest. |
 
 The two numeric settings must be positive whole numbers. Missing numeric settings use their defaults. `DATABASE_URL` must be a PostgreSQL connection string. Invalid settings stop the program with an error. Existing environment variables take precedence over values in the local files.
 
-The `.env`, `.env.local`, and local `.neon` link files are ignored by Git. AI and email API keys will be added when those integrations are implemented.
+The `.env`, `.env.local`, and local `.neon` link files are ignored by Git. Database checks do not require the Gemini API key. Email credentials will be added when delivery is implemented.

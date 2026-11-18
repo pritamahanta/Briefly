@@ -10,8 +10,10 @@
     "dev": "node --network-family-autoselection-attempt-timeout=2000 --watch src/worker.js"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.147",
     "@neon/config": "^1.14.2",
     "@neon/env": "^2.1.5",
+    "ai": "^6.0.333",
     "dotenv": "^17.4.2",
     "pg": "^8.23.1",
     "rss-parser": "^3.13.0"
